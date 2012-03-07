@@ -22,16 +22,24 @@ class LeShoot
     height: 50
   targets: []
 
-  construct: (canvas,size) ->
-    if not canvas.canvas? or not canvas.nodeName is "CANVAS" 
+  constructor: (canvas,size) ->
+    console.log(canvas)
+    if canvas.canvas? and canvas.nodeName != "CANVAS" 
       throw "Missing Canvas object or canvas DOM node"
     @canvas = if canvas.nodeName? then canvas.getContext("2d") else canvas
-
     if size.width
       @boardSize.width = size.width
     if size.height
       @boardSize.height = size.height
 
+    @canvas.beginPath()
+    @canvas.arc(100,100,50,0, 2*Math.PI,true)
+    @canvas.stroke()
+    
+    @canvas.beginPath()
+    @canvas.arc(200,200,20,0, 2*Math.PI,true)
+    @canvas.stroke()
+  
   render: () ->
 
   addTarget: (target) ->
@@ -48,3 +56,11 @@ class LeShoot
   showField: () ->
 
   hideField: () ->
+
+
+draw = ->
+  canvas = document.getElementById('le-shoot')
+  try
+    game = new LeShoot(canvas,{width:600,height:400});
+  catch err
+    console.log("Catch: #{err.message}")
