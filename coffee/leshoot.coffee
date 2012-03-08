@@ -1,18 +1,46 @@
 class Target
-  that = null
+  thata = null
+  thatb = null
+  thatc = null
+  score = 0
 
   constructor: (@raphObject,@center,@radio,@points) ->
 
   isHit: (hit) ->
 
-  getScore: (hit) ->
+  getScore: () ->
+    @score
 
   draw: () ->
-    @that = @raphObject.circle(@center.x, @center.y, @radio)
-    @that.attr({"fill": "white", "stroke": "none"})
-    @that.click( ->
-      @animate({"opacity": 0.0},1000)
+    @thata = @raphObject.circle(@center.x, @center.y, @radio)
+    @thata.attr({"fill": "white", "stroke": "none"})
+    @thatb = @raphObject.circle(@center.x, @center.y, @reduceRadio(@radio, 40))
+    @thatb.attr({"fill": "blue"})
+    @thatc = @raphObject.circle(@center.x, @center.y, @reduceRadio(@radio, 80))
+    @thatc.attr({"fill": "red"})
+    $this = this
+    @thata.click( ->
+      $this.score = $this.points[0]
+      $this.hideAll()
     )
+    @thatb.click( ->
+      $this.score = $this.points[1]
+      $this.hideAll()
+    )
+    @thatc.click( ->
+      $this.score = $this.points[2]
+      $this.hideAll()
+    )
+
+  reduceRadio: (r,per) ->
+    r - r*(per/100)
+
+  hideAll: () ->
+    @thata.animate({"opacity": 0.0},1000)
+    @thatb.animate({"opacity": 0.0},1000)
+    @thatc.animate({"opacity": 0.0},1000)
+    text = @raphObject.text(@center.x,@center.y, @score)
+    text.attr({"font-size": "12","font-weight":"bold","fill":"white"})
 
 class LeShoot
   canvas: null      #store canvas
@@ -31,11 +59,11 @@ class LeShoot
     if size.height
       @boardSize.height = size.height
 
-    @addTarget(new Target(@canvas,{x:20,y:20},10, 0))
-    @addTarget(new Target(@canvas,{x:200,y:120},30, 0))
-    @addTarget(new Target(@canvas,{x:400,y:40},20, 0))
-    @addTarget(new Target(@canvas,{x:110,y:330},40, 0))
-    @addTarget(new Target(@canvas,{x:410,y:220},50, 0))
+    @addTarget(new Target(@canvas,{x:20,y:20},10, [10,20,50]))
+    @addTarget(new Target(@canvas,{x:200,y:120},30, [10,20,50]))
+    @addTarget(new Target(@canvas,{x:400,y:40},20, [10,20,50]))
+    @addTarget(new Target(@canvas,{x:110,y:330},40, [10,20,50]))
+    @addTarget(new Target(@canvas,{x:410,y:220},50, [10,20,50]))
     
     @render("all")
 
