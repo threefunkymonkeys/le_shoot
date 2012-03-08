@@ -1,15 +1,18 @@
 class Target
-  contruct: (center,radio,points) ->
-    @center = center
-    @radio = radio
-    @points = points
+  that = null
+
+  constructor: (@raphObject,@center,@radio,@points) ->
 
   isHit: (hit) ->
 
   getScore: (hit) ->
 
   draw: () ->
-   
+    @that = @raphObject.circle(@center.x, @center.y, @radio)
+    @that.attr({"fill": "white", "stroke": "none"})
+    @that.click( ->
+      @animate({"opacity": 0.0},1000)
+    )
 
 class LeShoot
   canvas: null      #store canvas
@@ -22,25 +25,23 @@ class LeShoot
     height: 50
   targets: []
 
-  constructor: (canvas,size) ->
-    console.log(canvas)
-    if canvas.canvas? and canvas.nodeName != "CANVAS" 
-      throw "Missing Canvas object or canvas DOM node"
-    @canvas = if canvas.nodeName? then canvas.getContext("2d") else canvas
+  constructor: (@canvas,size) ->
     if size.width
       @boardSize.width = size.width
     if size.height
       @boardSize.height = size.height
 
-    @canvas.beginPath()
-    @canvas.arc(100,100,50,0, 2*Math.PI,true)
-    @canvas.stroke()
+    @addTarget(new Target(@canvas,{x:20,y:20},10, 0))
+    @addTarget(new Target(@canvas,{x:200,y:120},30, 0))
+    @addTarget(new Target(@canvas,{x:400,y:40},20, 0))
+    @addTarget(new Target(@canvas,{x:110,y:330},40, 0))
+    @addTarget(new Target(@canvas,{x:410,y:220},50, 0))
     
-    @canvas.beginPath()
-    @canvas.arc(200,200,20,0, 2*Math.PI,true)
-    @canvas.stroke()
-  
-  render: () ->
+    @render("all")
+
+  render: (cant) ->
+    if cant == "all"
+      target.draw() for target in @targets
 
   addTarget: (target) ->
     @targets.push(target)
@@ -59,8 +60,8 @@ class LeShoot
 
 
 draw = ->
-  canvas = document.getElementById('le-shoot')
+  canvas = Raphael("canvas", 600, 400)
   try
-    game = new LeShoot(canvas,{width:600,height:400});
+    game = new LeShoot(canvas,{width:600,height:400})
   catch err
     console.log("Catch: #{err.message}")

@@ -3,8 +3,23 @@
   <head>
     <title>Le Shoot</title>
     <script type="text/javascript" src="js/leshoot.js"></script>
+    <script type="text/javascript" src="lib/raphael-min.js"></script>
+    <style>
+      #canvas {
+        background-color: #333;
+        width: 600px;
+        height: 400px;
+        margin: 0 auto;
+        cursor: crosshair;
+      }
+    </style>
   </head>
-  <body onload="draw();">
-    <canvas id="le-shoot" width="600" height="400"></canvas>
+  <body >
+    <div id="canvas"></div>
+    <script type="text/javascript">
+      window.onload = function() {
+        draw();
+      }
+    </script>
   </body>
 </html>
