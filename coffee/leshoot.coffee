@@ -23,11 +23,12 @@ class Target
       y: @raphObject.canvas.offsetTop
 
     handler = @target.click( (eve) ->
-      th.target.animate({"opacity": 0.0}, 500)
+      th.target.animate({"opacity": 0.0}, 1000, ">", ->
+        th.target.remove()
+      )
       pos = th.getCursorPosition(eve)
       th.calcScore({x: pos.x - raphOffset.x, y: pos.y - raphOffset.y})
       th.showScore()
-      th.target.remove()
     )
        
 
