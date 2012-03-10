@@ -1,5 +1,6 @@
 class Target
   score = 0
+  destroyed = false
 
   constructor: (@raphObject,@center,@radio,@points) ->
     if @points.length == 0
@@ -7,6 +8,9 @@ class Target
 
   getScore: () ->
     @score
+
+  isDestroyed: () ->
+    @destroyed
 
   draw: () ->
     thata = @raphObject.circle(@center.x, @center.y, @radio)
@@ -17,18 +21,19 @@ class Target
     thatc.attr({"fill": "red"})
     @target = @raphObject.set(thata, thatb,thatc)
 
-    th = this
+    self = this
     raphOffset =
       x: @raphObject.canvas.offsetLeft
       y: @raphObject.canvas.offsetTop
 
     handler = @target.click( (eve) ->
-      th.target.animate({"opacity": 0.0}, 1000, ">", ->
-        th.target.remove()
+      self.destroyed = true
+      self.target.animate({"opacity": 0.0}, 1000, ">", ->
+        self.target.remove()
       )
-      pos = th.getCursorPosition(eve)
-      th.calcScore({x: pos.x - raphOffset.x, y: pos.y - raphOffset.y})
-      th.showScore()
+      pos = self.getCursorPosition(eve)
+      self.calcScore({x: pos.x - raphOffset.x, y: pos.y - raphOffset.y})
+      self.showScore()
     )
        
 
@@ -50,7 +55,6 @@ class Target
   
   calcScore: (p) ->
     d = @getDistance(@center, p)
-    console.log d
     r1 = @reduceRadio(@radio, 40)
     r2 = @reduceRadio(@radio, 80)
 
@@ -67,28 +71,112 @@ class Target
 
 class LeShoot
   canvas: null      #store canvas
+  jail: null
   startTarget: 2    #first level: 2 targets
   boardSize:        #board config
     width: 600
     height: 400
   jailSize:         #mouse jail size
-    width: 50
-    height: 50
+    width: 75
+    height: 75
   targets: []
+  levelStart: false
+  totalShots: 0
+  countDownMax: 3
+  countDownCurrent: 3
+  countDownTimer: null
+  countDownObject: null
+
+  gameTimer: 0.0
+
+  loop: null
 
   constructor: (@canvas,size) ->
+    
+    self = this
     if size.width
       @boardSize.width = size.width
     if size.height
       @boardSize.height = size.height
-
-    @addTarget(new Target(@canvas,{x:20,y:20},10, [10,20,100]))
-    @addTarget(new Target(@canvas,{x:200,y:120},30, []))
+     
+    jailPos = 
+      x: @boardSize.width - @jailSize.width - 30
+      y: @boardSize.height - @jailSize.height - 30
+    @jail = @canvas.rect(jailPos.x, jailPos.y, @jailSize.width, @jailSize.height, 10)
+    @jail.attr({"stroke": "white", "stroke-width": 2, "stroke-dasharray": ".","fill": "white", "opacity": 0.5})
+    @jail.hover( () ->
+      self.jail.attr({"fill": "white", "opacity": 0.3})
+      self.countDown()
+    , () ->
+      self.jail.attr({"fill": "white", "opacity": 0.5})
+      if self.levelStart 
+        self.jail.remove()
+      else
+        self.breakCountDown()
+    , self
+    , self
+    )
+    #@addTarget(new Target(@canvas,{x:20,y:20},10, [10,20,100]))
+    #@addTarget(new Target(@canvas,{x:200,y:120},30, []))
     @addTarget(new Target(@canvas,{x:400,y:40},20, []))
     @addTarget(new Target(@canvas,{x:110,y:330},40, []))
     @addTarget(new Target(@canvas,{x:410,y:220},50, []))
     
-    @render("all")
+    #@render("all")
+
+  every: (ms,cb) -> setInterval cb, ms
+
+  countDown: () ->
+    self = this
+    self.countDownObject = self.canvas.text(self.boardSize.width/2, self.boardSize.height/2, self.countDownCurrent)
+    self.countDownObject.attr({"font-size": "50", "fill": "white"})
+    self.countDownCurrent = parseInt(self.countDownCurrent) - 1  
+    self.countDownTimer = self.every 1000, () ->
+      if self.countDownCurrent == 0
+        self.countDownCurrent = self.countDownMax
+        self.countDownObject.attr({"font-size": "40", "fill": "white","text": "Kill them all!"}).animate({"opacity":0}, 1000,"linear", ->
+          @remove()
+        )
+        clearInterval(self.countDownTimer)  
+        self.levelStart = true
+        self.render("all")
+        self.gameTimerObject = self.canvas.text(70, self.boardSize.height - 20, "Time: 0.0")
+        self.gameTimerObject.attr({"fill": "white", "font-size": "20"})
+        self.loop = self.every 100, () -> 
+          self.gameLoop()
+      else
+        self.countDownObject.attr("text", self.countDownCurrent )
+        self.countDownCurrent = parseInt(self.countDownCurrent) - 1  
+  
+  breakCountDown: ->
+    clearInterval(@countDownTimer)  
+    @countDownObject.remove()
+    soon = @canvas.text(@boardSize.width/2, @boardSize.height/2, "Too soon!")
+    soon.attr({"font-size": "40", "fill": "white"}).animate({"opacity":0}, 1000,"linear", ->
+      @remove()
+    )
+    @countDownCurrent = @countDownMax
+
+  gameLoop: () ->
+    @updateGameTimer()
+    destroyed = 0
+    for target in @targets  
+     destroyed++ if target.isDestroyed()
+    if @targets.length == destroyed
+      clearInterval(@loop)
+      @levelStart = false
+      score = 0
+      score += target.getScore() for target in @targets
+      score = score / @gameTimer
+      score = score.toFixed(0)
+      @canvas.clear()
+      scoreText = @canvas.text(@boardSize.width/2, @boardSize.height/2, "Time: "+@gameTimer+ "\nScore: " + score)
+      scoreText.attr({"fill": "white", "font-size": "50"})
+
+  updateGameTimer: ->
+    @gameTimer = parseFloat(@gameTimer) + 0.1
+    @gameTimer = @gameTimer.toFixed(1)
+    @gameTimerObject.attr("text", "Time: "+@gameTimer)
 
   render: (cant) ->
     if cant == "all"
@@ -103,8 +191,6 @@ class LeShoot
 
   nextLevel: (num) ->
 
-  countDown: (max) ->
-  
   showField: () ->
 
   hideField: () ->
