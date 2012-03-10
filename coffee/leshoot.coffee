@@ -129,11 +129,11 @@ class LeShoot
     , self
     , self
     )
-    #@addTarget(new Target(@canvas,{x:20,y:20},10, [10,20,100]))
-    #@addTarget(new Target(@canvas,{x:200,y:120},30, []))
-    @addTarget(new Target(@canvas,{x:400,y:40},20, []))
+    @addTarget(new Target(@canvas,{x:20,y:20},10, [10,20,100]))
+    @addTarget(new Target(@canvas,{x:200,y:120},30, []))
+    @addTarget(new Target(@canvas,{x:500,y:40},20, []))
     @addTarget(new Target(@canvas,{x:110,y:330},40, []))
-    @addTarget(new Target(@canvas,{x:410,y:220},50, []))
+    @addTarget(new Target(@canvas,{x:200,y:220},50, []))
     
     #@render("all")
 
@@ -147,12 +147,12 @@ class LeShoot
     self.countDownTimer = self.every 1000, () ->
       if self.countDownCurrent == 0
         self.countDownCurrent = self.countDownMax
-        self.countDownObject.attr({"font-size": "40", "fill": "white","text": "Kill them all!"}).animate({"opacity":0}, 1000,"linear", ->
+        self.render("all")
+        self.countDownObject.attr({"font-size": "40", "fill": "red","text": "Kill them all!"}).toFront().animate({"opacity":0}, 1000,"linear", ->
           @remove()
         )
         clearInterval(self.countDownTimer)  
         self.levelStart = true
-        self.render("all")
         self.gameTimerObject = self.canvas.text(70, self.boardSize.height - 20, "Time: 0.0")
         self.gameTimerObject.attr({"fill": "white", "font-size": "20"})
         self.loop = self.every 100, () -> 
@@ -180,7 +180,12 @@ class LeShoot
       @levelStart = false
       score = 0
       score += target.getScore() for target in @targets
-      score = score / @gameTimer
+      if @gameTimer >= @targets.length
+        score -= 20
+      else if @gameTimer > @targets.length*0.7  
+        score += 20
+      else
+        score += 100
       score = score.toFixed(0)
       @canvas.clear()
       scoreText = @canvas.text(@boardSize.width/2, @boardSize.height/2, "Time: "+@gameTimer+ "\nScore: " + score)
