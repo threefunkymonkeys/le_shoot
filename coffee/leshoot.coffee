@@ -26,15 +26,28 @@ class Target
       x: @raphObject.canvas.offsetLeft
       y: @raphObject.canvas.offsetTop
 
-    handler = @target.click( (eve) ->
-      self.destroyed = true
-      self.target.animate({"opacity": 0.0}, 1000, ">", ->
-        self.target.remove()
-      )
-      pos = self.getCursorPosition(eve)
-      self.calcScore({x: pos.x - raphOffset.x, y: pos.y - raphOffset.y})
-      self.showScore()
-    )
+    handler = @target.drag -> 
+        self.destroyed = true
+      , (x,y,eve) ->
+        self.destroyed = true
+        self.target.animate({"opacity": 0.0}, 1000, ">", ->
+          self.target.remove()
+        )
+        pos = self.getCursorPosition(eve)
+        self.calcScore({x: pos.x - raphOffset.x, y: pos.y - raphOffset.y})
+        self.showScore()
+      , ->
+        self.destroyed = true
+      
+    #handler = @target.click( (eve) ->
+      #self.destroyed = true
+      #self.target.animate({"opacity": 0.0}, 1000, ">", ->
+        #self.target.remove()
+      #)
+      #pos = self.getCursorPosition(eve)
+      #self.calcScore({x: pos.x - raphOffset.x, y: pos.y - raphOffset.y})
+      #self.showScore()
+    #)
        
 
   getCursorPosition: (e) ->
