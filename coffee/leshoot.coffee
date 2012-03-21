@@ -18,12 +18,39 @@ class _Canvas
 
   getCanvas: () ->
     @canvas
-  
+ 
+class Menu
+  selection = -1
+
+  constructor: () ->
+    @canvas = root.Canvas.get().getCanvas()
+    @menuItems = ["Play"]
+    @menuObjects = []
+
+  getSelection: ->
+    @selection
+
+  render: (@center) ->
+    for item,i in @menuItems
+      object = @canvas.text(@center.x, @center.y, item)
+      object.attr({"fill": "white", "font-size": 50, "cursor": "hand"})
+      object.click =>
+        @selection = i
+        console.log @selection
+
+      object.hover( () ->
+          this.attr({"opacity": 0.7})
+        , () ->
+          this.attr({"opacity": 1})
+      )
+
+      @menuObjects.push object
+
 class Target
   score = 0
   destroyed = false
 
-  constructor: (,@center,@radio,@points) ->
+  constructor: (@center,@radio,@points) ->
     @raphObject = root.Canvas.get().getCanvas()
     if @points.length == 0
       @points = [10, 20, 50] #create a function to add points using radio
@@ -114,6 +141,8 @@ class LeShoot
   gameTimer: 0.0
 
   loop: null
+  menu: null
+  mLoop: null
 
   constructor: (size) ->
     @canvas = root.Canvas.get().getCanvas()
@@ -121,7 +150,25 @@ class LeShoot
       @boardSize.width = size.width
     if size.height
       @boardSize.height = size.height
-     
+    @center = 
+      x: @boardSize.width / 2
+      y: @boardSize.height / 2
+
+    @menu = new Menu()
+    @renderMenu()
+    @mLoop = @every 100, @menuLoop
+
+  renderMenu: () ->
+    @menu.render(@center) 
+
+  menuLoop: () =>
+    if @menu.getSelection() == 1
+      @canvas.clear()
+      clearInterval(@mLoop)
+      @playLevel()
+
+
+  playLevel: () ->
     jailPos = 
       x: @boardSize.width - @jailSize.width - 30
       y: @boardSize.height - @jailSize.height - 30
@@ -174,7 +221,7 @@ class LeShoot
     @countDownObject.remove()
     soon = @canvas.text(@boardSize.width/2, @boardSize.height/2, "Too soon!")
     soon.attr({"font-size": "40", "fill": "white"}).animate({"opacity":0}, 1000,"linear", ->
-      this.remove()
+      soon.remove()
     )
     @countDownCurrent = @countDownMax
 
