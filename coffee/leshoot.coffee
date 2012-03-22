@@ -1,10 +1,10 @@
 root = exports ? this
 
 draw = ->
-  canvas = Raphael("canvas", 600, 400)
+  canvas = Raphael("canvas", 800, 600)
   root.Canvas.get(canvas)
   try
-    game = new LeShoot({width:600,height:400})
+    game = new LeShoot({width:800,height:600})
   catch err
     console.log("Catch: #{err.message}")
 
@@ -60,6 +60,12 @@ class Target
 
   isDestroyed: () ->
     @destroyed
+
+  getRadio: () ->
+    @radio
+
+  getCenter: () ->
+    @center
 
   draw: () ->
     thata = @raphObject.circle(@center.x, @center.y, @radio)
@@ -167,11 +173,10 @@ class LeShoot
       clearInterval(@mLoop)
       @playLevel()
 
-
   playLevel: () ->
     jailPos = 
-      x: @boardSize.width - @jailSize.width - 30
-      y: @boardSize.height - @jailSize.height - 30
+      x: @boardSize.width - @jailSize.width - 20
+      y: @boardSize.height - @jailSize.height - 20
 
     @jail = @canvas.rect(jailPos.x, jailPos.y, @jailSize.width, @jailSize.height, 10)
     @jail.attr({"stroke": "white", "stroke-width": 2, "stroke-dasharray": ".","fill": "white", "opacity": 0.5})
@@ -185,15 +190,39 @@ class LeShoot
       else
         @breakCountDown()
     )
-    @addTarget(new Target({x:20,y:20},10, [10,20,100]))
-    @addTarget(new Target({x:200,y:120},30, []))
-    @addTarget(new Target({x:500,y:40},20, []))
-    @addTarget(new Target({x:110,y:330},40, []))
-    @addTarget(new Target({x:300,y:270},50, []))
-    
-    #@render("all")
 
+    @addTarget(new Target(@getRandomCenter(10),10, [10,20,100]))
+    @addTarget(new Target(@getRandomCenter(30),30, []))
+    @addTarget(new Target(@getRandomCenter(30),30, []))
+    @addTarget(new Target(@getRandomCenter(20),20, []))
+    @addTarget(new Target(@getRandomCenter(40),40, []))
+    @addTarget(new Target(@getRandomCenter(40),40, []))
+    @addTarget(new Target(@getRandomCenter(40),40, []))
+    @addTarget(new Target(@getRandomCenter(50),50, []))
+    @addTarget(new Target(@getRandomCenter(50),50, []))
+    
   every: (ms,cb) -> setInterval cb, ms
+
+  getRandomCenter: (r) ->
+    isValid = false
+    while(true)
+      min = r + 5
+      max = @boardSize.height - r - 5 - @jailSize.height - 20
+      height = Math.floor(Math.random() * (max - min + 1)) + min
+      max = @boardSize.width - r - 5
+      width = Math.floor(Math.random() * (max - min + 1)) + min
+      isValid = true 
+      for target in @targets
+        center = target.getCenter()
+        radio = target.getRadio()
+        dR = target.getDistance(center, {x: width, y: height})
+        
+        if dR <= (radio + r + 10)           
+          isValid = false 
+          break
+      break if isValid
+
+    {x: width, y: height}
 
   countDown: () ->
     @countDownObject = @canvas.text(@boardSize.width/2, @boardSize.height/2, @countDownCurrent)
